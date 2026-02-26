@@ -1,1 +1,0 @@
-./apex/examples/research-agent.sh "how do transformer attention mechanisms work" 12
