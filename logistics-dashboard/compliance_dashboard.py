@@ -7,12 +7,11 @@ import os
 import textwrap
 
 # --- Import your Gemini interaction functions ---
-# Assuming gemini_partner_compliance_app_interactive.py is in the same directory
 # and you've refactored it to make functions callable
 # For this example, I'll embed the core Gemini logic directly for simplicity,
 # but ideally, you'd import from your other script or a utility module.
 
-import google.generativeai as genai
+from google import genai
 
 # --- Gemini Configuration (Copied from your interactive script) ---
 GEMINI_API_KEY = None
@@ -20,8 +19,8 @@ GEMINI_READY = False
 model = None
 try:
     GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+    client = genai.Client(api_key=GEMINI_API_KEY)
+
     print("[INFO] Gemini API configured successfully for dashboard.")
     GEMINI_READY = True
 except KeyError:
@@ -58,42 +57,6 @@ SIMULATED_CONTRACTS = {
 AVAILABLE_PARTNERS_LIST = list(SIMULATED_CONTRACTS.keys())
 
 # --- Gemini Interaction Functions (Copied and slightly adapted) ---
-def to_markdown_html(text): # To render newlines as <br> in HTML
-    if not text: return ""
-    # Convert markdown-like bullets to HTML lists if simple
-    lines = text.split('\n')
-    html_lines = []
-    in_list = False
-    for line in lines:
-        stripped_line = line.strip()
-        if stripped_line.startswith('* ') or stripped_line.startswith('• '):
-            if not in_list:
-                html_lines.append("<ul>")
-                in_list = True
-            html_lines.append(f"<li>{stripped_line[2:]}</li>")
-        elif stripped_line.startswith('- '): # Also treat hyphens as list items
-            if not in_list:
-                html_lines.append("<ul>")
-                in_list = True
-            html_lines.append(f"<li>{stripped_line[2:]}</li>")
-        else:
-            if in_list:
-                html_lines.append("</ul>")
-                in_list = False
-            if stripped_line: # Add non-empty lines as paragraphs
-                 html_lines.append(f"<p>{line}</p>") # Keep original spacing with <p>
-            elif html_lines and not html_lines[-1].endswith("<br>"): # Add <br> for empty lines if needed for spacing
-                 html_lines.append("<br>")
-
-
-    if in_list:
-        html_lines.append("</ul>")
-    return html.Div([dcc.Markdown(line) if not line.startswith("<") else html.Pre(line) for line in text.split('\n\n')])
-    # A more robust markdown to HTML might be needed for complex Gemini output
-    # For now, let's try simple line breaks and basic list conversion.
-    # A simpler approach for direct display:
-    # return html.Pre(text) # Displays text pre-formatted, preserving newlines
-
 def get_partner_compliance_brief_for_dashboard(partner_name):
     if not GEMINI_READY: return dcc.Markdown("Gemini API not ready.")
     # ... (rest of the get_partner_compliance_brief logic from your interactive script)
@@ -102,7 +65,7 @@ def get_partner_compliance_brief_for_dashboard(partner_name):
     contract_snippet = SIMULATED_CONTRACTS[partner_name]
     prompt = f"""You are an AI assistant for Maverick Logistics. Given the contract snippet for '{partner_name}': --- {contract_snippet} --- Generate a "Quick Compliance Brief" highlighting 3-4 most critical operational "Must Do's" or "Key Obligations". Present as actionable bullet points. Be concise."""
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
         # Using dcc.Markdown to render Gemini's markdown output nicely
         return dcc.Markdown(response.text)
     except Exception as e:
@@ -120,7 +83,7 @@ def analyze_scenario_compliance_for_dashboard(partner_name, operational_scenario
     contract_snippet = SIMULATED_CONTRACTS[partner_name]
     prompt = f"""You are an AI compliance analyst for Maverick Logistics. Contract with '{partner_name}': --- {contract_snippet} --- Scenario: "{operational_scenario}" --- Based *only* on the contract and scenario: 1. Potential breaches/obligations (e.g., notifications, penalties)? 2. Immediate actions for Maverick staff per contract? 3. If no implications, state so. Be specific."""
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
         return dcc.Markdown(response.text) # Render Gemini's markdown
     except Exception as e:
         return dcc.Markdown(f"Error with Gemini: {e}")

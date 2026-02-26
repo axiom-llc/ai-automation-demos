@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 # --- Configuration ---
-SHIPMENTS_LOG_CSV = 'maverick_daily_shipments_log.csv'
+SHIPMENTS_LOG_CSV = 'shipments.csv'
 # CHANGED API: Using /todos which has a boolean 'completed' field
 PARTNER_TASKS_API_URL = "https://jsonplaceholder.typicode.com/todos" # CHANGED
 DATABASE_NAME = 'maverick_operational_data.db'
@@ -90,7 +90,7 @@ def ingest_shipments_data(conn):
                            'origin_city', 'destination_city', 'load_type', 'package_count', 'shipment_value_usd',
                            'planned_departure_datetime', 'actual_departure_datetime', 'planned_arrival_datetime',
                            'actual_arrival_datetime', 'miles_driven', 'fuel_consumed_gallons',
-                           'fuel_efficiency_mpg', 'delivery_status', 'on_time_status', 'on_time_status_calculated', 'notes']]
+                           'fuel_efficiency_mpg', 'delivery_status', 'on_time_status_reported', 'on_time_status_calculated', 'notes']]
         df_to_insert.to_sql('daily_shipments', conn, if_exists='replace', index=False)
         print(f"[SUCCESS] Ingested {len(df)} shipment records into 'daily_shipments' table.")
     except FileNotFoundError:

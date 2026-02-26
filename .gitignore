@@ -13,27 +13,21 @@ build/
 venv/
 .venv/
 env/
-
 # Environment variables
 .env
 .env.*
-
 # Google Cloud
 .gcloud/
 gcloud-service-key.json
-*.json
-
+secrets.json
 # Logs
 *.log
 logs/
-
 # OS
 .DS_Store
 Thumbs.db
-
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-venv/
