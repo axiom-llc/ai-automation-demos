@@ -15,6 +15,10 @@ Autonomous research agent with self-directed SEARCH/THINK/DONE loop.
 Deterministic state tracking, tool gating, and trace logging.
 Built on [APEX](https://github.com/axiom-llc/apex).
 
+### [voice-agent](./voice-agent/)
+AI-powered voice agent with telephony integration.
+Gemini API + Flask + Twilio — automated call handling, AI conversation loop, and intelligent call routing.
+
 ---
 
 Built by [Axiom LLC](https://axiom-llc.github.io) · [Hire on Freelancer](https://www.freelancer.com/u/adam0641)
