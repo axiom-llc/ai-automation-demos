@@ -1,15 +1,10 @@
 #!/bin/bash
 # deploy.sh - Deploy to Google Cloud Run
 
-# Configuration
-PROJECT_ID="project555-485303"  # CHANGE THIS
-SERVICE_NAME="axiom-voice-agent"
-REGION="us-eastern1"  # Change if needed
+PROJECT_ID=""       # GCP project ID
+SERVICE_NAME=""     # Cloud Run service name
+REGION="us-east1"
 
-# Rename your file to vae.py (or update Dockerfile CMD)
-# Make sure vae.py is in this directory
-
-# Deploy
 gcloud run deploy $SERVICE_NAME \
   --source . \
   --platform managed \
@@ -18,7 +13,7 @@ gcloud run deploy $SERVICE_NAME \
   --set-env-vars GEMINI_API_KEY="$GEMINI_API_KEY" \
   --set-env-vars TWILIO_ACCOUNT_SID="$TWILIO_ACCOUNT_SID" \
   --set-env-vars TWILIO_AUTH_TOKEN="$TWILIO_AUTH_TOKEN" \
-  --set-env-vars MY_PHONE_NUMBER="$MY_PHONE_NUMBER" \
+  --set-env-vars CONTACT_PHONE="$CONTACT_PHONE" \
   --project $PROJECT_ID
 
-echo "Deployment complete! Update Twilio webhook to the URL shown above."
+echo "Done. Update Twilio webhook to the service URL above."
