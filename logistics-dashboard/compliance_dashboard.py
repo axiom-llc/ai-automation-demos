@@ -2,25 +2,13 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
-import requests # If you were to call an API wrapper for Gemini
 import os
-import textwrap
-
-# --- Import your Gemini interaction functions ---
-# and you've refactored it to make functions callable
-# For this example, I'll embed the core Gemini logic directly for simplicity,
-# but ideally, you'd import from your other script or a utility module.
 
 from google import genai
 
-# --- Gemini Configuration (Copied from your interactive script) ---
-GEMINI_API_KEY = None
 GEMINI_READY = False
-model = None
 try:
-    GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
-    client = genai.Client(api_key=GEMINI_API_KEY)
-
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     print("[INFO] Gemini API configured successfully for dashboard.")
     GEMINI_READY = True
 except KeyError:
@@ -28,7 +16,6 @@ except KeyError:
 except Exception as e:
     print(f"[ERROR] DASHBOARD: Failed to configure Gemini API: {e}")
 
-# --- Simulated Partner Contract Snippets (Copied) ---
 SIMULATED_CONTRACTS = {
     "Amazon-Prime": """
     Service Level Agreement for Amazon Prime Deliveries with Maverick Logistics:
@@ -56,48 +43,44 @@ SIMULATED_CONTRACTS = {
 }
 AVAILABLE_PARTNERS_LIST = list(SIMULATED_CONTRACTS.keys())
 
-# --- Gemini Interaction Functions (Copied and slightly adapted) ---
+
 def get_partner_compliance_brief_for_dashboard(partner_name):
-    if not GEMINI_READY: return dcc.Markdown("Gemini API not ready.")
-    # ... (rest of the get_partner_compliance_brief logic from your interactive script)
+    if not GEMINI_READY:
+        return dcc.Markdown("Gemini API not ready.")
     if partner_name not in SIMULATED_CONTRACTS:
         return dcc.Markdown(f"No contract for {partner_name}")
     contract_snippet = SIMULATED_CONTRACTS[partner_name]
     prompt = f"""You are an AI assistant for Maverick Logistics. Given the contract snippet for '{partner_name}': --- {contract_snippet} --- Generate a "Quick Compliance Brief" highlighting 3-4 most critical operational "Must Do's" or "Key Obligations". Present as actionable bullet points. Be concise."""
     try:
         response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        # Using dcc.Markdown to render Gemini's markdown output nicely
         return dcc.Markdown(response.text)
     except Exception as e:
         return dcc.Markdown(f"Error with Gemini: {e}")
 
 
 def analyze_scenario_compliance_for_dashboard(partner_name, operational_scenario):
-    if not GEMINI_READY: return dcc.Markdown("Gemini API not ready.")
-    # ... (rest of the analyze_scenario_compliance logic from your interactive script)
+    if not GEMINI_READY:
+        return dcc.Markdown("Gemini API not ready.")
     if partner_name not in SIMULATED_CONTRACTS:
         return dcc.Markdown(f"No contract for {partner_name}")
     if not operational_scenario.strip():
         return dcc.Markdown("Please provide an operational scenario.")
-
     contract_snippet = SIMULATED_CONTRACTS[partner_name]
     prompt = f"""You are an AI compliance analyst for Maverick Logistics. Contract with '{partner_name}': --- {contract_snippet} --- Scenario: "{operational_scenario}" --- Based *only* on the contract and scenario: 1. Potential breaches/obligations (e.g., notifications, penalties)? 2. Immediate actions for Maverick staff per contract? 3. If no implications, state so. Be specific."""
     try:
         response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        return dcc.Markdown(response.text) # Render Gemini's markdown
+        return dcc.Markdown(response.text)
     except Exception as e:
         return dcc.Markdown(f"Error with Gemini: {e}")
 
-# --- Initialize Dash App with Bootstrap Theme ---
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Maverick Compliance Assistant"
 
-# --- App Layout ---
 app.layout = dbc.Container([
     dbc.Row(dbc.Col(html.H1("Maverick Partner Compliance Assistant", className="text-center text-primary my-4"))),
-    
+
     dbc.Row([
-        # Left Column: Inputs
         dbc.Col([
             dbc.Card([
                 dbc.CardHeader("Select Partner & Action"),
@@ -121,9 +104,8 @@ app.layout = dbc.Container([
                     dbc.Button("Analyze Scenario Compliance", id="btn-analyze-scenario", color="success", className="mb-2", n_clicks=0),
                 ])
             ], className="mb-4")
-        ], width=12, md=5), # Inputs take 5 columns on medium screens
+        ], width=12, md=5),
 
-        # Right Column: Outputs
         dbc.Col([
             dbc.Card([
                 dbc.CardHeader("Gemini AI Analysis"),
@@ -131,31 +113,30 @@ app.layout = dbc.Container([
                     dbc.Alert("Select an action and partner to see results.", color="secondary")
                 ])
             ])
-        ], width=12, md=7) # Outputs take 7 columns
+        ], width=12, md=7)
     ]),
-     dbc.Row(dbc.Col(html.P(
+    dbc.Row(dbc.Col(html.P(
         "Note: This is a Proof of Concept using simulated contract data and Google's Gemini AI.",
         className="text-muted small text-center mt-4"
     )))
 
 ], fluid=True, className="p-3")
 
-# --- Callbacks for Buttons ---
+
 @app.callback(
     Output('gemini-output-area', 'children'),
     [Input('btn-get-brief', 'n_clicks'),
      Input('btn-analyze-scenario', 'n_clicks')],
     [State('gemini-partner-dropdown', 'value'),
      State('gemini-scenario-input', 'value')],
-    prevent_initial_call=True # Important: Do not run on page load
+    prevent_initial_call=True
 )
 def update_gemini_output(n_brief, n_analyze, selected_partner, scenario_text):
     ctx = dash.callback_context
     if not ctx.triggered:
-        button_id = 'No clicks yet'
         return dbc.Alert("Please select an action.", color="info")
-    else:
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if not GEMINI_READY:
         return dbc.Alert("Gemini API is not configured. Please set GEMINI_API_KEY environment variable.", color="danger")
@@ -165,23 +146,22 @@ def update_gemini_output(n_brief, n_analyze, selected_partner, scenario_text):
 
     if button_id == 'btn-get-brief':
         print(f"[DASH INFO] Getting brief for {selected_partner}")
-        brief_output = get_partner_compliance_brief_for_dashboard(selected_partner)
-        return html.Div([html.H4(f"Compliance Brief: {selected_partner}"), brief_output])
-    
+        return html.Div([html.H4(f"Compliance Brief: {selected_partner}"),
+                         get_partner_compliance_brief_for_dashboard(selected_partner)])
+
     elif button_id == 'btn-analyze-scenario':
         if not scenario_text or not scenario_text.strip():
             return dbc.Alert("Please enter an operational scenario to analyze.", color="warning")
         print(f"[DASH INFO] Analyzing scenario for {selected_partner}: {scenario_text[:50]}...")
-        analysis_output = analyze_scenario_compliance_for_dashboard(selected_partner, scenario_text)
-        return html.Div([html.H4(f"Scenario Analysis: {selected_partner}"), html.P(f"Scenario: {scenario_text}", className="fst-italic mb-2"), analysis_output])
-    
+        return html.Div([html.H4(f"Scenario Analysis: {selected_partner}"),
+                         html.P(f"Scenario: {scenario_text}", className="fst-italic mb-2"),
+                         analyze_scenario_compliance_for_dashboard(selected_partner, scenario_text)])
+
     return dbc.Alert("No action selected or error.", color="light")
 
 
-# --- Run the App ---
 if __name__ == '__main__':
     if not GEMINI_READY:
         print("\n[CRITICAL] Gemini API key not configured. The dashboard will load but AI features will not work.")
         print("Please set the GEMINI_API_KEY environment variable and restart.")
-    # Set debug=False if using the .sh script that redirects output
-    app.run_server(debug=False, host='127.0.0.1', port=8051) # Use a different port, e.g., 8051
+    app.run_server(debug=False, host='127.0.0.1', port=8051)
