@@ -1,39 +1,48 @@
-# Logistics Dashboard — AI-Powered Operations POC
+# logistics-dashboard
 
-Proof-of-concept operational intelligence dashboard for a logistics company. Delivered in ~4 hours. Demonstrates end-to-end AI integration: data ingestion → REST API → live dashboard with Gemini-powered compliance analysis.
-
-## Architecture
-
-```
-maverick_data_ingestion_service.py   ← generates/loads operational data into SQLite
-maverick_operations_api_service.py   ← Flask REST API over SQLite
-maverick_live_dashboard.py           ← Dash live dashboard consuming the API
-compliance_dashboard.gemini.py       ← Gemini API compliance analysis layer
-demo.sh                              ← one-command orchestration
-```
-
-## Running the Demo
-
-```bash
-pip install flask dash dash-bootstrap-components plotly pandas requests
-chmod +x demo.sh
-./demo.sh
-```
-
-Dashboard: http://127.0.0.1:8050
-API: http://127.0.0.1:5000
-
-## API Endpoints
-
-```
-GET /api/logistics/daily_summary
-GET /api/partner_performance/status?partner_contract=Amazon-Prime
-```
+AI-powered operational intelligence dashboard for a logistics company. Built as a working POC in ~4 hours.
 
 ## Stack
 
-Python · Flask · Dash · SQLite · Gemini API · Plotly
+- **Gemini 2.5 Flash** — contract compliance analysis and scenario Q&A
+- **Flask** — REST API serving shipment and partner metrics
+- **Dash + Plotly** — live operational dashboard with auto-refresh
+- **SQLite** — ingested shipment and partner task data
+- **pandas** — CSV ingestion and on-time delivery calculation
 
-## Scenarios
+## Structure
 
-`scenario1.py`, `scenario2.py`, `scenario3.py` — simulate operational edge cases for demo purposes.
+```
+data_ingestion.py       ← ingests shipments.csv + partner API data into SQLite
+operations_api.py       ← Flask REST API (daily summary, partner performance)
+live_dashboard.py       ← Dash dashboard consuming the API
+compliance_dashboard.py ← Gemini-powered contract compliance assistant
+dashboard.html          ← static dashboard mockup
+website.html            ← static marketing/landing page mockup
+shipments.csv           ← sample shipment data
+demo.sh                 ← orchestrates full demo: ingest → API → dashboard
+```
+
+## Setup
+
+```bash
+pip install pandas requests flask dash dash-bootstrap-components plotly google-genai
+export GEMINI_API_KEY=your-key
+```
+
+## Usage
+
+```bash
+# Run full demo (ingest → start API + dashboard servers)
+./demo.sh
+
+# Or run components individually:
+python data_ingestion.py      # populate SQLite DB
+python operations_api.py      # start API on :5000
+python live_dashboard.py      # start dashboard on :8050
+python compliance_dashboard.py # start compliance assistant on :8051
+```
+
+**API endpoints:**
+- `GET /api/logistics/daily_summary`
+- `GET /api/partner_performance/status?partner_contract=Amazon-Prime`
