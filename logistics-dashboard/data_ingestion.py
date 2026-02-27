@@ -1,16 +1,12 @@
 import pandas as pd
 import requests
 import sqlite3
-import json
 from datetime import datetime
 
-# --- Configuration ---
 SHIPMENTS_LOG_CSV = 'shipments.csv'
-# CHANGED API: Using /todos which has a boolean 'completed' field
-PARTNER_TASKS_API_URL = "https://jsonplaceholder.typicode.com/todos" # CHANGED
+PARTNER_TASKS_API_URL = "https://jsonplaceholder.typicode.com/todos"
 DATABASE_NAME = 'maverick_operational_data.db'
 
-# Conceptual mapping of API userId to Maverick's partners
 PARTNER_ID_TO_NAME_MAP = {
     1: "Amazon-Prime",
     2: "Hertz-Local",
@@ -62,18 +58,17 @@ def create_db_tables(conn):
     )
     ''')
 
-    # Modified table name and columns for clarity with /todos
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS partner_tasks_status (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         partner_contract TEXT,
-        task_source_id INTEGER, -- e.g., todo ID from JSONPlaceholder
-        task_title TEXT,        -- from todo 'title'
-        task_completed_status BOOLEAN, -- from todo 'completed'
-        simulated_service_health TEXT, -- Derived: "OK", "Action Required"
+        task_source_id INTEGER,
+        task_title TEXT,
+        task_completed_status BOOLEAN,
+        simulated_service_health TEXT,
         log_timestamp TEXT DEFAULT CURRENT_TIMESTAMP
     )
-    ''') # CHANGED table name and columns
+    ''')
     conn.commit()
     print("[DB INFO] Database tables ensured.")
 
@@ -90,47 +85,43 @@ def ingest_shipments_data(conn):
                            'origin_city', 'destination_city', 'load_type', 'package_count', 'shipment_value_usd',
                            'planned_departure_datetime', 'actual_departure_datetime', 'planned_arrival_datetime',
                            'actual_arrival_datetime', 'miles_driven', 'fuel_consumed_gallons',
-                           'fuel_efficiency_mpg', 'delivery_status', 'on_time_status_reported', 'on_time_status_calculated', 'notes']]
+                           'fuel_efficiency_mpg', 'delivery_status', 'on_time_status_reported',
+                           'on_time_status_calculated', 'notes']]
         df_to_insert.to_sql('daily_shipments', conn, if_exists='replace', index=False)
         print(f"[SUCCESS] Ingested {len(df)} shipment records into 'daily_shipments' table.")
     except FileNotFoundError:
         print(f"[ERROR] Shipment log file not found: {SHIPMENTS_LOG_CSV}")
     except UnicodeDecodeError as e:
-        print(f"[ERROR] Encoding error reading {SHIPMENTS_LOG_CSV}. Ensure it's plain UTF-8 or try adding encoding='utf-8-sig' to pd.read_csv(). Details: {e}")
+        print(f"[ERROR] Encoding error reading {SHIPMENTS_LOG_CSV}: {e}")
     except Exception as e:
         print(f"[ERROR] Failed to ingest shipment data: {e}")
 
-def ingest_partner_tasks_data(conn): # CHANGED function name
+def ingest_partner_tasks_data(conn):
     print(f"\n[INFO] Ingesting simulated partner tasks from '{PARTNER_TASKS_API_URL}'...")
     partner_tasks_to_insert = []
     try:
         for api_user_id, partner_name in PARTNER_ID_TO_NAME_MAP.items():
             response = requests.get(PARTNER_TASKS_API_URL, params={'userId': api_user_id}, timeout=10)
             response.raise_for_status()
-            todos = response.json() # Now these are To-Do items
+            todos = response.json()
 
-            for todo in todos[:5]: # Take first 5 "tasks" for each mapped partner
-                task_completed_status = todo['completed'] # Direct boolean
-                
-                sim_health = "OK"
-                if not task_completed_status: # If task is not completed
-                    sim_health = "Action Required" 
-                
+            for todo in todos[:5]:
+                task_completed_status = todo['completed']
+                sim_health = "OK" if task_completed_status else "Action Required"
                 partner_tasks_to_insert.append((
                     partner_name,
-                    todo['id'], 
+                    todo['id'],
                     todo['title'],
                     task_completed_status,
                     sim_health
                 ))
-        
+
         if partner_tasks_to_insert:
             cursor = conn.cursor()
-            # CHANGED table name and columns for INSERT
             cursor.executemany('''
-            INSERT OR IGNORE INTO partner_tasks_status 
+            INSERT OR IGNORE INTO partner_tasks_status
             (partner_contract, task_source_id, task_title, task_completed_status, simulated_service_health)
-            VALUES (?, ?, ?, ?, ?) 
+            VALUES (?, ?, ?, ?, ?)
             ''', partner_tasks_to_insert)
             conn.commit()
             print(f"[SUCCESS] Ingested {len(partner_tasks_to_insert)} simulated partner tasks into 'partner_tasks_status' table.")
@@ -144,19 +135,18 @@ def ingest_partner_tasks_data(conn): # CHANGED function name
 
 def run_ingestion_service():
     print("-" * 60)
-    print("  Maverick Data Ingestion Service - Act I")
+    print("  Maverick Data Ingestion Service")
     print("-" * 60)
 
     conn = sqlite3.connect(DATABASE_NAME)
     create_db_tables(conn)
     ingest_shipments_data(conn)
-    ingest_partner_tasks_data(conn) # CHANGED function call
+    ingest_partner_tasks_data(conn)
     conn.close()
 
-    print(f"\n[INFO] Database '{DATABASE_NAME}' is ready for Act II.")
-    print("[INFO] Use a tool like 'DB Browser for SQLite' to inspect.")
+    print(f"\n[INFO] Database '{DATABASE_NAME}' is ready.")
     print("\n" + "-" * 60)
-    print("  Act I - Data Ingestion Complete.")
+    print("  Data Ingestion Complete.")
     print("-" * 60 + "\n")
 
 if __name__ == "__main__":
