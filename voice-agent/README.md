@@ -1,9 +1,7 @@
 # Axiom LLC Voice Agent
-
 AI-powered phone IVR system built with Twilio, Gemini, and Flask. Handles inbound calls with a multi-option menu, preset service information, and a live AI assistant for natural-language Q&A about services and past projects.
 
 ## Architecture
-
 ```
 Twilio (inbound call)
     └── Flask (TwiML routing)
@@ -13,7 +11,6 @@ Twilio (inbound call)
 ```
 
 ## Stack
-
 - **Twilio** — telephony, call routing, audio recording
 - **Gemini 2.5 Flash Lite** — audio transcription + conversational AI
 - **Flask** — TwiML webhook server
@@ -21,28 +18,22 @@ Twilio (inbound call)
 - **Google Cloud Run** — serverless deployment target
 
 ## Setup
-
 ```bash
 pip install -r requirements.txt
-
 export GEMINI_API_KEY="..."
 export TWILIO_ACCOUNT_SID="ACxxxx"
 export TWILIO_AUTH_TOKEN="..."
 export CONTACT_PHONE="+1xxxxxxxxxx"
-
-python voice-agent.py
+python main.py
 ```
 
 ## Local Testing
-
 ```bash
 ngrok http 5000
 ```
-
 Set Twilio webhook: `Console → Phone Numbers → Voice → Webhook → https://<ngrok-url>/`
 
 ## Endpoints
-
 | Route | Description |
 |---|---|
 | `POST /` | Main IVR menu |
@@ -53,14 +44,12 @@ Set Twilio webhook: `Console → Phone Numbers → Voice → Webhook → https:/
 | `POST /voicemail` | Voicemail fallback |
 
 ## Deployment
-
 ```bash
 # Configure PROJECT_ID and SERVICE_NAME in deploy.sh first
 bash deploy.sh
 ```
 
 ## IVR Menu
-
 ```
 1 → Automation services
 2 → AI/ML services
