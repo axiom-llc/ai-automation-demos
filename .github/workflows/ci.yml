@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install pytest flask requests google-genai
+          # Install logistics dashboard deps
+          pip install pandas plotly dash dash-bootstrap-components || true
+
+      - name: Run smoke tests
+        env:
+          GEMINI_API_KEY: "test-key-ci"
+          TWILIO_ACCOUNT_SID: "test-sid"
+          TWILIO_AUTH_TOKEN: "test-token"
+          CONTACT_PHONE: "+15550000000"
+        run: pytest tests/ -q --tb=short
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build voice agent Docker image
+        run: docker build -t voice-agent-smoke ./voice-agent
+        # Verifies the image builds clean. Adjust path if Dockerfile moves.
