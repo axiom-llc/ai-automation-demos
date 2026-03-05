@@ -70,7 +70,7 @@ class TestRoute:
     def test_digit_9_returns_dial_verb(self, client):
         r = client.post("/route", data={"Digits": "9"})
         assert r.status_code == 200
-        assert b"<Dial>" in r.data
+        assert b"<Dial" in r.data  # matches <Dial> and <Dial attr="...">
 
     def test_unknown_digit_redirects_to_root(self, client):
         r = client.post("/route", data={"Digits": "0"})
