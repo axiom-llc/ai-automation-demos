@@ -1,9 +1,9 @@
-# ai-automation-demos
+# axiom-demos
 
 Focused demonstrations of applied AI integration and automation delivery.
 Each project is self-contained, runnable, and maps to a real client problem.
 
-![CI](https://github.com/axiom-llc/ai-automation-demos/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/axiom-llc/axiom-demos/actions/workflows/ci.yml/badge.svg)
 
 ---
 
