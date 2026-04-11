@@ -34,4 +34,4 @@ Smoke tests cover all Flask routes in both demos. Gemini API and Twilio calls ar
 
 ---
 
-Built by [Axiom LLC](https://axiom-llc.github.io)
+Built by [AXIOM LLC](https://axiom-llc.github.io)
